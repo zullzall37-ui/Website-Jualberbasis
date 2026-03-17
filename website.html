@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rebeca Store</title>
+
+<style>
+body{margin:0;background:#0f0f0f;color:#fff;font-family:sans-serif}
+.wrapper{max-width:900px;margin:auto}
+
+/* HEADER */
+header{
+display:flex;
+justify-content:space-between;
+padding:15px;
+font-size:20px;
+}
+
+/* SIDEBAR */
+.menu-btn{cursor:pointer}
+.sidebar{
+position:fixed;
+right:-260px;
+top:0;
+width:260px;
+height:100%;
+background:#1c1c1c;
+padding:20px;
+transition:.3s;
+z-index:99;
+}
+.sidebar.active{right:0}
+.sidebar button{width:100%;margin:5px 0}
+
+/* BANNER GRID */
+.banner{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:3px;
+}
+.banner img{
+width:100%;
+height:80px;
+object-fit:cover;
+}
+
+/* MENU GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:10px;
+margin-top:10px;
+}
+
+.card{
+background:#1c1c1c;
+border-radius:10px;
+padding:5px;
+text-align:center;
+}
+
+.card img{
+width:100%;
+height:100px;
+object-fit:cover;
+border-radius:8px;
+}
+
+button{
+background:#2ecc71;
+border:none;
+padding:8px;
+border-radius:8px;
+color:#fff;
+margin-top:5px;
+cursor:pointer;
+}
+
+/* CART */
+.cart{
+position:fixed;
+bottom:0;
+width:100%;
+max-width:900px;
+left:50%;
+transform:translateX(-50%);
+background:#1c1c1c;
+padding:10px;
+border-top:1px solid #333;
+}
+
+/* SECTION */
+.section{padding:10px}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<header>
+🛍 Rebeca Store
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
+</header>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+<button onclick="adminLogin()">🔐 Login Admin</button>
+<button onclick="scrollToId('orders')">📦 Status Pesanan</button>
+<button onclick="scrollToId('rating')">⭐ Rating</button>
+<button onclick="scrollToId('map')">📍 Lokasi</button>
+</div>
+
+<!-- BANNER -->
+<div class="banner" id="banner"></div>
+
+<!-- MENU -->
+<div class="grid" id="menu"></div>
+
+<!-- STATUS -->
+<div class="section" id="orders"></div>
+
+<!-- RATING -->
+<div class="section" id="rating"></div>
+
+<!-- MAP -->
+<div class="section" id="map">
+<iframe width="100%" height="200"
+src="https://maps.google.com/maps?q=indonesia&output=embed"></iframe>
+</div>
+
+<!-- ADMIN -->
+<div class="section" id="admin" style="display:none"></div>
+
+</div>
+
+<!-- CART -->
+<div class="cart">
+<div id="cart"></div>
+Total: Rp <span id="total">0</span>
+<button onclick="checkout()">📲 Pesan via WhatsApp</button>
+</div>
+
+<script>
+
+// DATA 10 MENU
+let menu = JSON.parse(localStorage.getItem("menu")) || [
+{nama:"Tahu Sumedang",harga:2000,img:"https://i.imgur.com/0rVeh4p.jpg"},
+{nama:"Otak-otak",harga:3000,img:"https://i.imgur.com/3rR4C1E.jpg"},
+{nama:"Kentang",harga:10000,img:"https://i.imgur.com/mkz4Z9X.jpg"},
+{nama:"Nugget",harga:10000,img:"https://i.imgur.com/Br6nq7k.jpg"},
+{nama:"Martabak",harga:10000,img:"https://i.imgur.com/yh1Xg7l.jpg"},
+{nama:"Cilok",harga:5000,img:"https://i.imgur.com/Z8X8jPq.jpg"},
+{nama:"Tempe",harga:2000,img:"https://i.imgur.com/8fJ9KZC.jpg"},
+{nama:"Bakwan",harga:2000,img:"https://i.imgur.com/Y2bW4fA.jpg"},
+{nama:"Risoles",harga:10000,img:"https://i.imgur.com/Qx9Q7Q1.jpg"},
+{nama:"Paket Campur",harga:15000,img:"https://i.imgur.com/5d7JgYy.jpg"}
+];
+
+let cart=[];
+
+// BANNER
+function loadBanner(){
+let html="";
+menu.forEach(m=> html+=`<img src="${m.img}">`);
+document.getElementById("banner").innerHTML=html;
+}
+
+// MENU
+function loadMenu(){
+let html="";
+menu.forEach(m=>{
+html+=`
+<div class="card">
+<img src="${m.img}">
+<b>${m.nama}</b><br>
+Rp${m.harga}
+<button onclick="add('${m.nama}',${m.harga})">Tambah</button>
+</div>`;
+});
+document.getElementById("menu").innerHTML=html;
+}
+
+// CART
+function add(n,p){
+let item=cart.find(i=>i.n==n);
+if(item){item.q++}else{cart.push({n,p,q:1})}
+renderCart();
+}
+
+function renderCart(){
+let html="",total=0;
+cart.forEach(i=>{
+total+=i.p*i.q;
+html+=`${i.n} x${i.q}<br>`;
+});
+cart.length==0 ? html="Keranjang kosong" : null;
+document.getElementById("cart").innerHTML=html;
+document.getElementById("total").innerText=total;
+}
+
+// CHECKOUT WA
+function checkout(){
+if(cart.length==0){alert("Keranjang kosong");return;}
+let text="Halo Rebeca Store,%0A%0ASaya ingin memesan:%0A";
+cart.forEach(i=> text+=`- ${i.n} x${i.q}%0A`);
+text+=`%0ATotal: Rp ${document.getElementById("total").innerText}`;
+window.open("https://wa.me/6281545397385?text="+text);
+}
+
+// STATUS
+function loadOrders(){
+let orders=JSON.parse(localStorage.getItem("orders")||"[]");
+let html="<h3>📦 Status Pesanan</h3>";
+orders.forEach((o,i)=>{
+html+=`<div class="card">Order ${i+1} - ${o.status}</div>`;
+});
+document.getElementById("orders").innerHTML=html;
+}
+
+// RATING
+function loadRating(){
+let reviews=JSON.parse(localStorage.getItem("reviews")||"[]");
+let html="<h3>⭐ Rating</h3>";
+reviews.forEach(r=>{
+html+=`<div class="card">⭐${r.star}<br>${r.komen}</div>`;
+});
+html+=`
+<textarea id="komen"></textarea>
+<button onclick="addReview()">Kirim</button>`;
+document.getElementById("rating").innerHTML=html;
+}
+
+function addReview(){
+let reviews=JSON.parse(localStorage.getItem("reviews")||"[]");
+reviews.push({star:5,komen:komen.value});
+localStorage.setItem("reviews",JSON.stringify(reviews));
+loadRating();
+}
+
+// ADMIN LOGIN
+function adminLogin(){
+let u=prompt("Username:");
+let p=prompt("Password:");
+
+let admins=[
+{u:"owner",p:"admin123"},
+{u:"kasir",p:"rebeca123"}
+];
+
+let ok=admins.find(a=>a.u==u&&a.p==p);
+
+if(ok){showAdmin()} else alert("Salah!");
+}
+
+// ADMIN PANEL
+function showAdmin(){
+let html="<h3>⚙ Admin Panel</h3>";
+html+=`<input id="nama"><input id="harga">
+<button onclick="addMenu()">Tambah Menu</button>`;
+document.getElementById("admin").style.display="block";
+document.getElementById("admin").innerHTML=html;
+}
+
+// TAMBAH MENU
+function addMenu(){
+menu.push({
+nama:nama.value,
+harga:parseInt(harga.value),
+img:"https://source.unsplash.com/200x200/?food"
+});
+localStorage.setItem("menu",JSON.stringify(menu));
+loadMenu();
+}
+
+// SIDEBAR
+function toggleMenu(){
+document.getElementById("sidebar").classList.toggle("active");
+}
+
+function scrollToId(id){
+document.getElementById(id).scrollIntoView({behavior:"smooth"});
+}
+
+// INIT
+loadBanner();
+loadMenu();
+loadOrders();
+loadRating();
+
+</script>
+
+</body>
+</html>
